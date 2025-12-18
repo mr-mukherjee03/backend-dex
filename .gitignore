@@ -4,6 +4,9 @@ node_modules/
 # Build Output
 dist/
 
+#public
+public/
+
 # Environment Variables
 .env
 
@@ -26,4 +29,3 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-public
