@@ -53,8 +53,6 @@ We chose **Market Orders** as the primary order type to focus on speed and immed
 1.  **Start the Server & Worker**:
     ```bash
     npm run dev
-    # Or for the full demo flow
-    npx ts-node scripts/demo_full_flow.ts
     ```
 
 ## Testing
