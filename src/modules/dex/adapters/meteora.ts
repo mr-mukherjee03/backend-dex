@@ -22,7 +22,7 @@ export class MeteoraAdapter implements DexAdapter {
     tokenB: string;
   }): Promise<LiquidityPool[]> {
     try {
-      // Use configured pool from environment if available
+
       const envPoolId = process.env.METEORA_POOL_ID;
       const envTokenB = process.env.DEVNET_MOCK_USDC_MINT;
       const DEVNET_WSOL = 'So11111111111111111111111111111111111111112';

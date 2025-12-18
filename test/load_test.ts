@@ -41,14 +41,6 @@ async function runConcurrencyTest() {
 async function runRateLimitTest() {
     console.log('\n--- Scenario B: 100 Requests / Minute ---');
     console.log('Target: ~1.67 requests/sec. Running for 1 minute (simulation: 20 orders only to save time if desired? user said 100 req/min)');
-    // We will do a burst of 100 requests spread over 60 seconds? Or just 100 requests as fast as possible?
-    // "100 request / minute" usually implies a rate limit or a sustained load.
-    // I will try to submit 100 orders with a small delay to simulate the rate, or just blast them and measure if we *can* handle 100/min (which is very low).
-    // 100/min is only 1.6/sec. Node should handle this easily.
-    // I will simply submit 100 orders sequentially with appropriate delay to match the rate, OR submit them all and verify system handled it.
-    // "Can you do that" implies testing capability.
-
-    // Changing approach: Blast 100 requests and measure total time. If < 60s, we easily meet the requirement.
 
     console.log('Sending 100 requests immediately to test throughput capability...');
     const start = Date.now();

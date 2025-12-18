@@ -34,7 +34,6 @@ export class RaydiumAdapter implements DexAdapter {
 
       const pools: LiquidityPool[] = [];
 
-      // Add Env Pool if available
       if (envPoolId && envTokenB) {
         if ((tokenA === DEVNET_WSOL && tokenB === envTokenB) || (tokenA === envTokenB && tokenB === DEVNET_WSOL)) {
           pools.push({
@@ -48,14 +47,10 @@ export class RaydiumAdapter implements DexAdapter {
         }
       }
 
-      // Add Hardcoded / Mock Pool as Fallback for "Hybrid" approach
-      // Using an "old" hardcoded Devnet ID or just a mock ID
-      const HARDCODED_POOL = '8WwcNqdZjCY5Pt7AkhupAFknV2txca9sq6YBkGzLbvdt_MOCK';
-      // Note: appending _MOCK to safely trigger mock logic if needed, OR just use it.
 
+      const HARDCODED_POOL = '8WwcNqdZjCY5Pt7AkhupAFknV2txca9sq6YBkGzLbvdt_MOCK';
       const MOCK_USDC = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 
-      // If user asks for SOL/HardcodedUSDC
       if ((tokenA === DEVNET_WSOL && tokenB === MOCK_USDC) || (tokenA === MOCK_USDC && tokenB === DEVNET_WSOL)) {
         pools.push({
           dex: 'raydium',
@@ -75,8 +70,6 @@ export class RaydiumAdapter implements DexAdapter {
     }
   }
 
-  // ... fetchPoolsFromApi ...
-
   async quote({
     pool,
     tokenIn,
@@ -87,7 +80,6 @@ export class RaydiumAdapter implements DexAdapter {
     amountIn: number;
   }): Promise<QuoteResult> {
     try {
-      // If Mock pool, allow immediate mock logic
       if (pool.poolId.endsWith('_MOCK')) {
         return this.mockQuote(pool, tokenIn, amountIn);
       }
@@ -98,7 +90,6 @@ export class RaydiumAdapter implements DexAdapter {
         disableFeatureCheck: true,
       });
 
-      // Try Real Quote
       const poolInfo = await raydium.cpmm.getRpcPoolInfo(pool.poolId);
       const outputMint = tokenIn === poolInfo.mintA.toBase58() ? poolInfo.mintB : poolInfo.mintA;
       const result = (raydium.cpmm as any).computeSwapAmount({
@@ -118,7 +109,7 @@ export class RaydiumAdapter implements DexAdapter {
       };
 
     } catch (e: any) {
-      // Fallback to Mock Quote for Hybrid Approach
+
       if (pool.poolId.includes('_MOCK') || e.message.includes('fetch pool info error') || e.message.includes('not found')) {
         return this.mockQuote(pool, tokenIn, amountIn);
       }
@@ -232,7 +223,7 @@ export class RaydiumAdapter implements DexAdapter {
       dex: 'raydium',
       poolId: pool.poolId,
       amountOut: amountOut,
-      priceImpactBps: 10, // Mock low impact
+      priceImpactBps: 10,
       feeBps: pool.feeBps
     };
   }
