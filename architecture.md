@@ -1,9 +1,7 @@
 # System Architecture
 
-![Architecture Diagram](architecture_diagram.png)
-
 ## Overview
-The Eterna DEX Aggregator is designed as a high-performance, fault-tolerant system for executing token swaps on the Solana blockchain. It employs an asynchronous architecture to handle order processing reliability and implements a "Hybrid" execution model to seamless support both Mainnet (real liquidity) and Devnet (sparse liquidity/mocking) environments.
+The DEX Aggregator is designed as a high-performance, fault-tolerant system for executing token swaps on the Solana blockchain. It employs an asynchronous architecture to handle order processing reliability and implements a "Hybrid" execution model to seamless support both Mainnet (real liquidity) and Devnet (sparse liquidity/mocking) environments.
 
 ## High-Level Architecture
 

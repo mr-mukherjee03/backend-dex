@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eterna DEX Aggregator | Live Demo</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card: #141414;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --text: #e5e5e5;
+            --text-dim: #a3a3a3;
+            --border: #333;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            background: linear-gradient(90deg, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .steps {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .step.completed {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .step.active .step-icon {
+            background: var(--primary);
+        }
+
+        .step.completed .step-icon {
+            background: var(--success);
+        }
+
+        .log-container {
+            margin-top: 2rem;
+            background: #000;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .highlight {
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Eterna DEX Aggregator</h1>
+        <p class="subtitle">Live Order Execution Demo</p>
+
+        <button id="startBtn" class="btn" onclick="startDemo()">Start Demo Order</button>
+
+        <div class="steps" id="steps">
+            <div class="step" id="step-ROUTING">
+                <div class="step-icon">1</div>
+                <div>
+                    <div>Routing</div>
+                    <small style="color: grey">Finding best path (Raydium/Meteora)</small>
+                </div>
+            </div>
+            <div class="step" id="step-QUOTED">
+                <div class="step-icon">2</div>
+                <div>
+                    <div>Quoted</div>
+                    <small style="color: grey">Price locked</small>
+                </div>
+            </div>
+            <div class="step" id="step-SUBMITTED">
+                <div class="step-icon">3</div>
+                <div>
+                    <div>Submitted</div>
+                    <small style="color: grey">Transaction sent to Solana</small>
+                </div>
+            </div>
+            <div class="step" id="step-CONFIRMED">
+                <div class="step-icon">4</div>
+                <div>
+                    <div>Confirmed</div>
+                    <small style="color: grey">On-chain verification</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-container" id="logs">
+            <div class="log-entry">> Ready to start...</div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        const btn = document.getElementById('startBtn');
+        const logs = document.getElementById('logs');
+
+        function log(msg, highlight = false) {
+            const div = document.createElement('div');
+            div.className = 'log-entry ' + (highlight ? 'highlight' : '');
+            div.innerText = `> ${msg}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function setStep(status) {
+            // Reset all
+            if (!status) {
+                document.querySelectorAll('.step').forEach(el => {
+                    el.classList.remove('active', 'completed');
+                });
+                return;
+            }
+
+            // Mark previous as completed, current as active
+            const steps = ['ROUTING', 'QUOTED', 'SUBMITTED', 'CONFIRMED'];
+            let passed = true;
+
+            steps.forEach(s => {
+                const el = document.getElementById('step-' + s);
+                if (s === status) {
+                    el.classList.add('active');
+                    el.classList.remove('completed');
+                    passed = false;
+                } else if (passed) {
+                    el.classList.add('completed');
+                    el.classList.remove('active');
+                } else {
+                    el.classList.remove('active', 'completed');
+                }
+            });
+
+            if (status === 'CONFIRMED') {
+                document.getElementById('step-CONFIRMED').classList.add('completed');
+                document.getElementById('step-CONFIRMED').classList.remove('active');
+            }
+        }
+
+        async function startDemo() {
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            logs.innerHTML = '';
+            setStep(null);
+            log("Creating order...");
+
+            try {
+                // 1. Create Order
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tokenIn: 'So11111111111111111111111111111111111111112', // SOL
+                        tokenOut: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', // USDC
+                        amountIn: 100000000 // 0.1 SOL
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.orderId) throw new Error(JSON.stringify(data));
+                log(`Order Created: ${data.orderId}`, true);
+
+                // 2. Connect WebSocket
+                connectWs(data.orderId);
+
+            } catch (err) {
+                log(`Error: ${err.message}`);
+                btn.disabled = false;
+                btn.innerText = "Start Demo Order";
+            }
+        }
+
+        function connectWs(orderId) {
+            const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${proto}://${window.location.host}/ws`);
+
+            ws.onopen = () => {
+                log("WebSocket Connected");
+                ws.send(JSON.stringify({ orderId }));
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.status) {
+                    log(`Status: ${msg.status}`, true);
+                    if (msg.status !== 'subscribed') {
+                        setStep(msg.status);
+                    }
+
+                    if (msg.txHash) {
+                        log(`TxHash: ${msg.txHash}`);
+                        btn.disabled = false;
+                        btn.innerText = "Start Again";
+                        ws.close();
+                    }
+                }
+                if (msg.error) log(`Error: ${msg.error}`);
+            };
+
+            ws.onclose = () => log("WebSocket Closed");
+        }
+    </script>
+</body>
+
+</html>
