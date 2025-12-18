@@ -243,13 +243,14 @@
 
             try {
                 // 1. Create Order
-                const res = await fetch('/api/orders', {
+                const res = await fetch('/api/orders/execute', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         tokenIn: 'So11111111111111111111111111111111111111112', // SOL
                         tokenOut: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', // USDC
-                        amountIn: 100000000 // 0.1 SOL
+                        amountIn: 100000000, // 0.1 SOL
+                        slippageBps: 100 // 1%
                     })
                 });
                 const data = await res.json();
