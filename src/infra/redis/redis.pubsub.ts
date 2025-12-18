@@ -2,10 +2,12 @@
 import IORedis from "ioredis";
 import { config } from "../../config";
 import { OrderStatus } from "../../modules/orders/order.types";
+import { QuoteResult } from "../../modules/dex/interfaces/dex.interface";
 
 export type OrderEvent = {
     orderId: string;
     status: OrderStatus;
+    quote?: QuoteResult;
     txHash?: string;
     error?: string;
     timestamp: string;
