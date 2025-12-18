@@ -1,7 +1,7 @@
 # Eterna: Order Execution Engine
 
 ## Overview
-Eterna is a high-performance order execution engine built for Solana DEXs. It routes orders to the best liquidity pool (Raydium or Meteora) and executes them using a scalable, asynchronous architecture.
+A high-performance order execution engine built for Solana DEXs. It routes orders to the best liquidity pool (Raydium or Meteora) and executes them using a scalable, asynchronous architecture.
 
 ## Architecture & Design Decisions
 We chose **Market Orders** as the primary order type to focus on speed and immediate execution logic.
@@ -29,8 +29,8 @@ We chose **Market Orders** as the primary order type to focus on speed and immed
 ### Installation
 1.  Clone the repo:
     ```bash
-    git clone <repo-url>
-    cd eterna
+    git clone https://github.com/mr-mukherjee03/backend-dex.git
+    cd backend-dex
     ```
 2.  Install dependencies:
     ```bash
@@ -117,9 +117,9 @@ graph TD
     -   **Non-blocking UI**: The user gets an immediate confirmation that the order was received.
 
 ### 3. DEX Aggregator
--   **Responsibility**: The [DexAggregator](file:///c:/ASSIGNMENT/Eterna/src/modules/dex/dex.aggregator.ts#5-99) acts as a facade over individual DEX adapters. It queries all available sources in parallel to find the best price.
+-   **Responsibility**: The [DexAggregator](file:///src/modules/dex/dex.aggregator.ts#5-99) acts as a facade over individual DEX adapters. It queries all available sources in parallel to find the best price.
 -   **Caching**: Implements a short-lived (5000ms) in-memory cache for Quote Results.
-    -   *Note*: Pool discovery is strictly not cached directly; however, because the quote cache is keyed by [(tokenIn, tokenOut, amountIn)](file:///c:/ASSIGNMENT/Eterna/src/modules/dex/adapters/meteora.ts#60-134), repeated requests for the same parameters effectively skip the expensive discovery step.
+    -   *Note*: Pool discovery is strictly not cached directly; however, because the quote cache is keyed by [(tokenIn, tokenOut, amountIn)](file:///src/modules/dex/adapters/meteora.ts#60-134), repeated requests for the same parameters effectively skip the expensive discovery step.
 
 ### 4. DEX Adapters (Raydium & Meteora)
 -   **RaydiumAdapter**: Integrates with Raydium V2 SDK (CPMM).
@@ -131,15 +131,15 @@ graph TD
 ## Design Decisions
 
 ### Asynchronous Order Processing
-**Decision**: Decoupling order ingestion from execution.
+**Decision**: Decoupling order ingestion from execution.<br>
 **Reasoning**: Solana transactions can take several seconds to confirm. Keeping an HTTP connection open for this duration is brittle. An async queue allows the server to handle thousands of concurrent requests while workers process the heavy lifting of signing and confirming transactions at a controlled rate.
 
 ### Hybrid Devnet/Mainnet Support
-**Decision**: Integrating "Mock" logic directly into the Adapters.
+**Decision**: Integrating "Mock" logic directly into the Adapters.<br>
 **Reasoning**: Developing against Mainnet is expensive and risky. Developing against Devnet is frustrating due to broken pools and lack of liquidity. The Hybrid approach allows the system to behave *exactly* like production when possible, but seamlessly degrade to a simulation when necessary, allowing for uninterrupted UI and flow testing.
 
 ### In-Memory Quote Caching
-**Decision**: Caching `QuoteResult` for 5 seconds.
+**Decision**: Caching `QuoteResult` for 5 seconds.<br>  
 **Reasoning**: RPC calls to fetch pool states are expensive and rate-limited. In a high-traffic scenario, multiple users (or the same user polling) might request the same quote repeatedly. A short TTL cache protects the RPC endpoints without serving significantly stale prices.
 
 ## Fault Tolerance
@@ -172,5 +172,3 @@ Ran `npx ts-node test/load_test.ts`.
 
 > Note: These tests measure the **Submission Throughput** (API -> DB -> Queue). The background worker processes these asynchronously. Given the queue architecture, high submission throughput is expected and handled correctly.
 
-## Public Deployment
-[Link to deployed instance]
