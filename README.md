@@ -57,11 +57,12 @@ We chose **Market Orders** as the primary order type to focus on speed and immed
 
 ## Testing
 We have included robust load testing scripts:<br>
-2. **Load Tests**:
+2. **Load Tests**:<br>
     ```bash
     npx ts-node test/load_test.ts
     ```
-    *   Verifies 10 Concurrent Users
+    <br>
+    *   Verifies 10 Concurrent Users<br>
     *   Verifies 100 Requests/Minute throughput
 
 # System Architecture
