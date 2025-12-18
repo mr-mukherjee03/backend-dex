@@ -1,4 +1,3 @@
-// redis.pubsub.ts
 import IORedis from "ioredis";
 import { config } from "../../config";
 import { OrderStatus } from "../../modules/orders/order.types";
@@ -17,15 +16,17 @@ const CHANNEL_PREFIX = "order-events:";
 export const orderEventChannel = (orderId: string) =>
     `${CHANNEL_PREFIX}${orderId}`;
 
+const isTls = config.REDIS_URL.startsWith('rediss://');
+
 // 🔹 Dedicated publisher connection
 const pubRedis = new IORedis(config.REDIS_URL, {
-    tls: { rejectUnauthorized: false },
+    ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
     maxRetriesPerRequest: null,
 });
 
 // 🔹 Dedicated subscriber connection
 const subRedis = new IORedis(config.REDIS_URL, {
-    tls: { rejectUnauthorized: false },
+    ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
     maxRetriesPerRequest: null,
 });
 
@@ -37,8 +38,10 @@ subRedis.on("error", console.error);
 
 // -------- Publish --------
 export async function publishOrderEvent(event: OrderEvent) {
+    const channel = orderEventChannel(event.orderId);
+    console.log(`[PubSub] Publishing to ${channel}`, event);
     await pubRedis.publish(
-        orderEventChannel(event.orderId),
+        channel,
         JSON.stringify(event)
     );
 }
@@ -49,6 +52,7 @@ export async function subscribeToOrderEvents(
     handler: (event: OrderEvent) => void
 ) {
     const channel = orderEventChannel(orderId);
+    console.log(`[PubSub] Subscribing to ${channel}`);
 
     await subRedis.subscribe(channel);
 

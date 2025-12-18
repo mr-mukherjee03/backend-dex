@@ -1,4 +1,5 @@
 import { Worker, Job } from 'bullmq';
+console.log('[Worker] File Loaded');
 import IORedis from 'ioredis';
 import { redis } from '../../infra/redis/redis.client';
 import { publishOrderEvent } from '../../infra/redis/redis.pubsub';
@@ -14,12 +15,23 @@ type OrderJob = {
   orderId: string;
 };
 
-export const orderWorker = new Worker<OrderJob>(
-  'order-execution',
+const workerConnection = new IORedis(config.REDIS_URL, {
+  maxRetriesPerRequest: null,
+});
+
+workerConnection.on('connect', () => logger.info('Worker Redis connected'));
+workerConnection.on('error', (err) => logger.error({ err }, 'Worker Redis error'));
+
+const worker = new Worker<OrderJob>(
+  'order-execution-v2',
   async (job: Job<OrderJob>) => {
     const { orderId } = job.data;
+    /*
+    console.log(`[Worker] Order job started: ${orderId}`);
+    // throw new Error('FORCE FAIL DEBUG');
+    */
 
-    logger.info({ orderId }, 'Order job started');
+    console.log(`[Worker] Order job started: ${orderId}`);
 
     const order = await orderRepository.findById(orderId);
     if (!order) {
@@ -29,6 +41,7 @@ export const orderWorker = new Worker<OrderJob>(
     try {
       order.transition(OrderStatus.ROUTING);
       await orderRepository.updateStatus(order.id, order.status);
+
 
       publishOrderEvent({
         orderId: order.id,
@@ -88,9 +101,9 @@ export const orderWorker = new Worker<OrderJob>(
         status: order.status,
         txHash: order.txHash!,
         timestamp: new Date().toISOString(),
-      }).catch(err => logger.error({ err, orderId }, 'Failed to publish CONFIRMED event'));
+      }).catch(err => console.error('Failed to publish CONFIRMED event', err));
 
-      logger.info({ orderId }, 'Order confirmed');
+      console.log(`[Worker] Order confirmed: ${orderId}`);
       return { success: true };
     } catch (err: any) {
 
@@ -112,9 +125,7 @@ export const orderWorker = new Worker<OrderJob>(
     }
   },
   {
-    connection: new IORedis(config.REDIS_URL, {
-      maxRetriesPerRequest: null,
-    }),
+    connection: workerConnection,
     concurrency: CONCURRENCY,
     limiter: {
       max: 10,
@@ -122,6 +133,11 @@ export const orderWorker = new Worker<OrderJob>(
     },
   }
 );
+export const orderWorker = worker;
+
+orderWorker.on('ready', () => logger.info('Worker is ready to process jobs'));
+orderWorker.on('error', (err) => logger.error({ err }, 'Worker error'));
+orderWorker.on('failed', (job, err) => logger.error({ jobId: job?.id, err }, 'Job failed'));
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -142,6 +142,78 @@
         .highlight {
             color: var(--primary);
         }
+
+        .details-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .details-card.visible {
+            display: block;
+        }
+
+        .details-header {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .detail-value {
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .tx-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 0.5rem;
+            word-break: break-all;
+        }
+
+        .tx-link:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -180,6 +252,33 @@
                     <div>Confirmed</div>
                     <small style="color: grey">On-chain verification</small>
                 </div>
+            </div>
+        </div>
+
+        <div id="details-card" class="details-card">
+            <div class="details-header">Order Details</div>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">DEX</span>
+                    <span class="detail-value" id="d-dex">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Amount Out</span>
+                    <span class="detail-value" id="d-out">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Pool ID</span>
+                    <span class="detail-value" id="d-pool" style="font-size: 0.8rem">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Price Impact</span>
+                    <span class="detail-value" id="d-impact">-</span>
+                </div>
+            </div>
+            <div id="tx-section"
+                style="margin-top: 1rem; display: none; padding-top: 1rem; border-top: 1px solid #333;">
+                <span class="detail-label">Transaction Hash</span><br>
+                <a href="#" target="_blank" id="d-tx" class="tx-link">-</a>
             </div>
         </div>
 
@@ -239,6 +338,8 @@
             btn.innerText = "Processing...";
             logs.innerHTML = '';
             setStep(null);
+            document.getElementById('details-card').classList.remove('visible');
+            document.getElementById('tx-section').style.display = 'none';
             log("Creating order...");
 
             try {
@@ -279,6 +380,17 @@
 
             ws.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
+
+                if (msg.quote) {
+                    const card = document.getElementById('details-card');
+                    card.classList.add('visible');
+
+                    document.getElementById('d-dex').innerText = msg.quote.dex.toUpperCase();
+                    document.getElementById('d-out').innerText = (msg.quote.amountOut / 1_000_000).toFixed(4) + ' USDC';
+                    document.getElementById('d-pool').innerText = msg.quote.poolId.slice(0, 8) + '...';
+                    document.getElementById('d-impact').innerText = (msg.quote.priceImpactBps / 100).toFixed(2) + '%';
+                }
+
                 if (msg.status) {
                     log(`Status: ${msg.status}`, true);
                     if (msg.status !== 'subscribed') {
@@ -287,6 +399,13 @@
 
                     if (msg.txHash) {
                         log(`TxHash: ${msg.txHash}`);
+                        const txLink = document.getElementById('d-tx');
+                        const txSec = document.getElementById('tx-section');
+
+                        txLink.href = `https://solscan.io/tx/${msg.txHash}?cluster=devnet`;
+                        txLink.innerText = msg.txHash;
+                        txSec.style.display = 'block';
+
                         btn.disabled = false;
                         btn.innerText = "Start Again";
                         ws.close();
