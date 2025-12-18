@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: eterna-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: eterna
+      POSTGRES_PASSWORD: eterna
+      POSTGRES_DB: eterna_orders
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: eterna-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
