@@ -57,13 +57,7 @@ We chose **Market Orders** as the primary order type to focus on speed and immed
 
 ## Testing
 We have included robust load testing scripts:
-1.  **Browser Demo**:
-    ```bash
-    npx ts-node scripts/web_demo.ts
-    ```
-    Open `http://localhost:3004` to see orders flow visually.
-
-2.  **Load Tests**:
+2. **Load Tests**:
     ```bash
     npx ts-node test/load_test.ts
     ```
