@@ -1,4 +1,4 @@
-# Eterna: Order Execution Engine
+# Order Execution Engine
 
 ## Overview
 A high-performance order execution engine built for Solana DEXs. It routes orders to the best liquidity pool (Raydium or Meteora) and executes them using a scalable, asynchronous architecture.
@@ -139,8 +139,7 @@ graph TD
 **Reasoning**: Developing against Mainnet is expensive and risky. Developing against Devnet is frustrating due to broken pools and lack of liquidity. The Hybrid approach allows the system to behave *exactly* like production when possible, but seamlessly degrade to a simulation when necessary, allowing for uninterrupted UI and flow testing.
 
 ### In-Memory Quote Caching
-**Decision**: Caching `QuoteResult` for 5 seconds.<br>  
-**Reasoning**: RPC calls to fetch pool states are expensive and rate-limited. In a high-traffic scenario, multiple users (or the same user polling) might request the same quote repeatedly. A short TTL cache protects the RPC endpoints without serving significantly stale prices.
+**Decision**: Caching `QuoteResult` for 5 seconds.<br>**Reasoning**: RPC calls to fetch pool states are expensive and rate-limited. In a high-traffic scenario, multiple users (or the same user polling) might request the same quote repeatedly. A short TTL cache protects the RPC endpoints without serving significantly stale prices.
 
 ## Fault Tolerance
 
