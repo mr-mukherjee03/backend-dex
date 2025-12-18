@@ -11,6 +11,7 @@ import { solanaClient } from '../solana.client';
 import { logger } from '../../../shared/logger';
 import bs58 from 'bs58';
 import BN from 'bn.js';
+import { config } from '../../../config';
 
 const RAYDIUM_API_V3 = 'https://api-v3.raydium.io';
 
@@ -28,8 +29,8 @@ export class RaydiumAdapter implements DexAdapter {
     tokenB: string;
   }): Promise<LiquidityPool[]> {
     try {
-      const envPoolId = process.env.RAYDIUM_POOL_ID;
-      const envTokenB = process.env.DEVNET_MOCK_USDC_MINT;
+      const envPoolId = config.RAYDIUM_POOL_ID;
+      const envTokenB = config.DEVNET_MOCK_USDC_MINT;
       const DEVNET_WSOL = 'So11111111111111111111111111111111111111112';
 
       const pools: LiquidityPool[] = [];
@@ -137,10 +138,10 @@ export class RaydiumAdapter implements DexAdapter {
     amountOutMin: number;
   }): Promise<{ txId: string }> {
     let wallet: Keypair | null = null;
-    if (process.env.PRIVATE_KEY) {
+    if (config.PRIVATE_KEY) {
       console.log("DEBUG: PRIVATE_KEY found in env");
       try {
-        wallet = Keypair.fromSecretKey(bs58.decode(process.env.PRIVATE_KEY));
+        wallet = Keypair.fromSecretKey(bs58.decode(config.PRIVATE_KEY));
         console.log("DEBUG: Wallet initialized: " + wallet.publicKey.toString());
       } catch (e) {
         logger.error("Invalid PRIVATE_KEY, falling back to mock");

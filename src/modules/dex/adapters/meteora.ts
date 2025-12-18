@@ -4,6 +4,7 @@ import { AmmImpl } from '@meteora-ag/dynamic-amm-sdk';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { DexAdapter, LiquidityPool, QuoteResult } from '../interfaces/dex.interface';
+import { config } from '../../../config';
 
 export class MeteoraAdapter implements DexAdapter {
   readonly name = 'meteora' as const;
@@ -23,8 +24,8 @@ export class MeteoraAdapter implements DexAdapter {
   }): Promise<LiquidityPool[]> {
     try {
 
-      const envPoolId = process.env.METEORA_POOL_ID;
-      const envTokenB = process.env.DEVNET_MOCK_USDC_MINT;
+      const envPoolId = config.METEORA_POOL_ID;
+      const envTokenB = config.DEVNET_MOCK_USDC_MINT;
       const DEVNET_WSOL = 'So11111111111111111111111111111111111111112';
 
       if (envPoolId && envTokenB) {
@@ -71,7 +72,7 @@ export class MeteoraAdapter implements DexAdapter {
 
     let wallet: Keypair;
     try {
-      wallet = Keypair.fromSecretKey(bs58.decode(process.env.PRIVATE_KEY!));
+      wallet = Keypair.fromSecretKey(bs58.decode(config.PRIVATE_KEY!));
     } catch (e) {
       throw new Error('Invalid PRIVATE_KEY for Meteora Swap');
     }

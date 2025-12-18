@@ -1,14 +1,13 @@
 
 import { Connection } from '@solana/web3.js';
 import { logger } from '../../shared/logger';
+import { config } from '../../config';
 
 export class SolanaClient {
     private connections: Connection[];
 
     constructor() {
-        const rpcUrls = process.env.RPC_URLS
-            ? process.env.RPC_URLS.split(',')
-            : ['https://api.devnet.solana.com'];
+        const rpcUrls = config.RPC_URLS;
 
         this.connections = rpcUrls.map(url => new Connection(url.trim(), 'confirmed'));
 

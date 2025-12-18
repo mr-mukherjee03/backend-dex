@@ -6,6 +6,7 @@ import { orderRepository } from './repository/order.repository';
 import { OrderStatus } from './order.types';
 import { dexAggregator } from '../dex/dex.aggregator';
 import { logger } from '../../shared/logger';
+import { config } from '../../config';
 
 const CONCURRENCY = 10;
 
@@ -111,7 +112,7 @@ export const orderWorker = new Worker<OrderJob>(
     }
   },
   {
-    connection: new IORedis(process.env.REDIS_URL!, {
+    connection: new IORedis(config.REDIS_URL, {
       maxRetriesPerRequest: null,
     }),
     concurrency: CONCURRENCY,
